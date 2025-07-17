@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Tweet
-from .froms import TweetForm ,UserRegistrationForm
+from .models import Tweet,Comment
+from .forms import TweetForm, UserRegistrationForm, CommentForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -20,8 +20,16 @@ def tweet_list(request):
         ).order_by('-created_add')
     else:
         tweets = Tweet.objects.all().order_by('-created_add')
-    return render(request, 'tweet_list.html', {'tweets': tweets})
 
+    if request.method == 'POST':
+        tweet_id = request.POST.get('tweet_id')
+        comment_text = request.POST.get('comment')
+        if tweet_id and comment_text:
+            tweet = Tweet.objects.get(id=tweet_id)
+            Comment.objects.create(tweet=tweet, user=request.user, content=comment_text)
+            return redirect('tweet_list')
+
+    return render(request, 'tweet_list.html', {'tweets': tweets})
 
 @login_required
 def tweet_create(request):
@@ -74,4 +82,18 @@ def register(request):
         form = UserRegistrationForm()
  
     return render( request, 'registration/register.html', {'form': form})
+
+
+@login_required
+def like_tweet(request, tweet_id):
+    tweet = get_object_or_404(Tweet, id=tweet_id)
+
+    if request.user in tweet.likes.all():
+        tweet.likes.remove(request.user)
+    else:
+        tweet.likes.add(request.user)
+
+    return redirect('tweet_list')  # or your tweet list view
+
+
 
