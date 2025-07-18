@@ -4,6 +4,7 @@ from .forms import TweetForm, UserRegistrationForm, CommentForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 
 
 def index(request):
@@ -21,12 +22,12 @@ def tweet_list(request):
     else:
         tweets = Tweet.objects.all().order_by('-created_add')
 
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.is_authenticated:
         tweet_id = request.POST.get('tweet_id')
         comment_text = request.POST.get('comment')
         if tweet_id and comment_text:
-            tweet = Tweet.objects.get(id=tweet_id)
-            Comment.objects.create(tweet=tweet, user=request.user, content=comment_text)
+            tweet = get_object_or_404(Tweet, id=tweet_id)
+            Comment.objects.create(tweet=tweet, user=request.user, comment_text=comment_text)
             return redirect('tweet_list')
 
     return render(request, 'tweet_list.html', {'tweets': tweets})
@@ -87,13 +88,30 @@ def register(request):
 @login_required
 def like_tweet(request, tweet_id):
     tweet = get_object_or_404(Tweet, id=tweet_id)
-
     if request.user in tweet.likes.all():
         tweet.likes.remove(request.user)
     else:
         tweet.likes.add(request.user)
 
-    return redirect('tweet_list')  # or your tweet list view
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+@login_required
+def tweet_comments_view(request, tweet_id):
+    tweet = Tweet.objects.get(id=tweet_id)
+    comments = tweet.comment_set.all().order_by('-created_at')  # or whatever your related_name is
+    form = CommentForm()
 
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
 
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.tweet = tweet
+            comment.user = request.user  # Make sure user is logged in
+            comment.save()
+            return redirect('tweet_comments', tweet_id=tweet_id)
+
+    comments = Comment.objects.filter(tweet=tweet)
+    return render(request, 'tweet_comments.html', {'tweet': tweet, 'comments': comments})
+
+   
 

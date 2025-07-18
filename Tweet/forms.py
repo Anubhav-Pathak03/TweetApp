@@ -16,9 +16,9 @@ class UserRegistrationForm(UserCreationForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['text']
+        fields = ['comment_text']
         widgets = {
-            'text': forms.Textarea(attrs={
+            'comment_text': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 2,
                 'placeholder': 'Add a comment...'

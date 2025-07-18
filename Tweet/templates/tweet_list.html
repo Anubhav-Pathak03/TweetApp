@@ -1,80 +1,68 @@
-{% extends "layout.html" %}
-{% block title %}Tweet App{% endblock %}
+{% extends 'layout.html' %}
+{% load static %}
 
 {% block content %}
-<h1 class="text-center mt-4">Welcome to Tweet App</h1>
+<div class="container mt-4">
+  <h2 class="mb-4">All Tweets</h2>
 
-{% if request.GET.q %}
-  <h5 class="text-center text-muted">Search results for: "<strong>{{ request.GET.q }}</strong>"</h5>
-{% endif %}
-
-{% if user.is_authenticated %}
-  <a class="btn btn-primary mb-4" href="{% url 'tweet_create' %}">Create a Tweet</a>
-{% else %}
-  <p class="mb-4"><a href="{% url 'login' %}">Login</a> to create a tweet.</p>
-{% endif %}
-
-<div class="container">
-  <div class="row">
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for tweet in tweets %}
-    <div class="col-md-4 col-sm-6 mb-4 d-flex">
-      <div class="card w-100 shadow">
-        {% if tweet.picture %}
-          <img src="{{ tweet.picture.url }}" class="card-img-top" alt="Tweet Image">
-        {% endif %}
-        <div class="card-body">
-          <p class="card-text">{{ tweet.text }}</p>
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ tweet.user.username }}</h5>
+            <p class="card-text">{{ tweet.text }}</p>
+            {% if tweet.picture %}
+              <img src="{{ tweet.picture.url }}" alt="Tweet image"
+                   class="img-fluid tweet-image mb-2"
+                   style="max-height: 300px; object-fit: cover; border-radius: 8px;">
+            {% endif %}
 
-          {# Like/Unlike Button – Only if logged in #}
-          {% if user.is_authenticated %}
-            <form action="{% url 'like_tweet' tweet.id %}" method="POST" class="mb-2 d-inline">
-              {% csrf_token %}
-              {% if user in tweet.likes.all %}
-                <button type="submit" class="btn btn-sm btn-danger">❤️ Unlike</button>
+            <!-- Like Button -->
+            {% if user.is_authenticated %}
+              <form action="{% url 'like_tweet' tweet.id %}" method="POST" class="inline">
+                {% csrf_token %}
+                {% if user in tweet.likes.all %}
+                  <button type="submit" class="btn btn-sm btn-danger">❤️ Unlike</button>
+                {% else %}
+                  <button type="submit" class="btn btn-sm btn-outline-secondary">🤍 Like</button>
+                {% endif %}
+              </form>
+            {% else %}
+              <p class="text-muted">Login to like this tweet.</p>
+            {% endif %}
+
+            <span>{{ tweet.likes.count }} Likes</span> <!-- Fixed -->
+
+            <!-- Comments -->
+            <div class="mt-3">
+              <h6>Comments ({{ tweet.comments.count }})</h6> <!-- Fixed -->
+              {% for comment in tweet.comments.all %}
+                <div class="border rounded p-2 mb-1">
+                  <strong>{{ comment.user.username }}:</strong> {{ comment.comment_text }}
+                  <small class="text-muted float-end">{{ comment.timestamp|date:"M d, H:i" }}</small>
+                </div>
+              {% empty %}
+                <p class="text-muted">No comments yet.</p>
+              {% endfor %}
+
+              <!-- Comment Form -->
+              {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'tweet_list' %}" class="mt-2">
+                  {% csrf_token %}
+                  <input type="hidden" name="tweet_id" value="{{ tweet.id }}">
+                  <div class="input-group">
+                    <input type="text" name="comment" class="form-control" placeholder="Write a comment..." required>
+                    <button class="btn btn-primary" type="submit">Post</button>
+                  </div>
+                </form>
               {% else %}
-                <button type="submit" class="btn btn-sm btn-outline-secondary">🤍 Like</button>
+                <p class="text-muted">Login to comment.</p>
               {% endif %}
-            </form>
-          {% else %}
-            <p class="text-muted">Login to like this tweet.</p>
-          {% endif %}
-          <span>{{ tweet.total_likes }} Likes</span>
-
-          {# Edit/Delete if owner #}
-          {% if tweet.user == request.user %}
-            <a href="{% url 'tweet_edit' tweet.id %}" class="btn btn-sm btn-primary mt-2">Edit</a>
-            <a href="{% url 'tweet_delete' tweet.id %}" class="btn btn-sm btn-danger mt-2">Delete</a>
-          {% endif %}
-
-          <hr>
-
-          {# Comment Form – Only if logged in #}
-          {% if user.is_authenticated %}
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="tweet_id" value="{{ tweet.id }}">
-              <textarea name="comment_text" class="form-control mb-2" rows="2" placeholder="Add a comment..."></textarea>
-              <button type="submit" class="btn btn-sm btn-outline-primary">Comment</button>
-            </form>
-          {% else %}
-            <p class="text-muted">Login to comment.</p>
-          {% endif %}
-
-          {# Show Comments #}
-          <div class="mt-3">
-            <strong>Comments:</strong>
-            {% for comment in tweet.comments.all %}
-              <div class="border p-2 mt-2 rounded bg-light">
-                <small><strong>{{ comment.user.username }}</strong>:</small>
-                <p class="mb-0">{{ comment.content }}</p>
-              </div>
-            {% empty %}
-              <p class="text-muted">No comments yet.</p>
-            {% endfor %}
+            </div>
           </div>
         </div>
       </div>
-    </div>
     {% endfor %}
   </div>
 </div>

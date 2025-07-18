@@ -3,24 +3,25 @@ from django.contrib.auth.models import User
 
 class Tweet(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField(max_length=240)
-    picture = models.ImageField(upload_to='photos/', blank=True, null=True)
+    text = models.TextField()
     created_add = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    # 🔥 New field to track likes
     likes = models.ManyToManyField(User, related_name='liked_tweets', blank=True)
+    picture = models.ImageField(upload_to='photos/', blank=True, null=True)
 
-    def total_likes(self):
+    def like_count(self):
         return self.likes.count()
 
     def __str__(self):
-        return f'{self.user.username} - {self.text[:10]}'
+        return f'{self.user.username} - {self.text[:30]}'
+
+    def comment_count(self):
+        return self.comments.count()  # fixed
+
 class Comment(models.Model):
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, related_name='comments')
+    tweet = models.ForeignKey(Tweet, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField(max_length=300)
-    created_at = models.DateTimeField(auto_now_add=True)
+    comment_text = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Comment by {self.user.username} on {self.tweet.id}'
+        return f"{self.user.username} on {self.tweet.id}"

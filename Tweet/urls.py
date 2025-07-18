@@ -26,6 +26,7 @@ urlpatterns = [
     path('<int:tweet_id>/edit/',views.tweet_edit,name="tweet_edit"),
     path('register/',views.register,name="register"),
     path('like/<int:tweet_id>/', views.like_tweet, name='like_tweet'),
+    path('tweet/<int:tweet_id>/comments/', views.tweet_comments_view, name='tweet_comments'),
 
 
 ] 

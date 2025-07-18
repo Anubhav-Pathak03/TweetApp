@@ -1,0 +1,28 @@
+<!-- tweet_comments.html -->
+{% extends 'layout.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="tweet-details">
+    <h3>{{ tweet.user.username }}'s Tweet</h3>
+    <p>{{ tweet.text }}</p>
+    {% if tweet.picture %}
+        <img src="{{ tweet.picture.url }}" alt="Tweet Image" style="max-width: 300px;">
+    {% endif %}
+    <p><strong>Likes:</strong> {{ tweet.like_set.count }} | <strong>Comments:</strong> {{ tweet.comment_set.count }}</p>
+</div>
+
+<hr>
+
+<div class="comment-section">
+    <h4>Comments</h4>
+    {% for comment in comments %}
+        <div class="comment-box">
+            <strong>{{ comment.user.username }}</strong>: {{ comment.text }}
+            <br><small>{{ comment.created_at|naturaltime }}</small>
+        </div>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
