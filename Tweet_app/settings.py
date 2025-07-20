@@ -145,3 +145,5 @@ LOGIN_URL='/accounts/login'
 LOGIN_REDIRECT_URL='/Tweet/'
 
 LOGOUT_REDIRECT_URL='/Tweet/'
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
