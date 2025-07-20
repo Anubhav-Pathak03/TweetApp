@@ -11,8 +11,6 @@ services:
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: Tweet_app.settings
-      - key: PYTHON_VERSION
-        value: 3.8.0
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
